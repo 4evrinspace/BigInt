@@ -57,9 +57,18 @@ LongNumber::LongNumber(const std::string &string_number, const long long& accura
     }
     //Correcting order
     std::reverse(_digits.begin(), _digits.end());
-    
     //Filling with fractional digits
     if (_fractional_size != 0) {
+        if (dot_position + 1 == string_len) {
+            for (long long i = 0; i < _fractional_size; i++) {
+                _digits.push_back(0);
+            }
+            if (this->_is_zero()) {
+                _is_negative = false;
+            }
+            return;
+        }
+        long long filled = 0;
         current_size = 0;
         current_number = 0;
         for (long long i = dot_position + 1; i < string_len; i++) {
@@ -77,7 +86,7 @@ LongNumber::LongNumber(const std::string &string_number, const long long& accura
         for (long long i = 0; i < back_zeros % DIGIT_LENGTH; i++) {
             current_number *= 10;
         }
-        if (dot_position + 1 != string_len){
+        if (current_number != 0 || back_zeros >= DIGIT_LENGTH){
             _digits.push_back(current_number);
         }
         for (long long i = 0; i < back_zeros / DIGIT_LENGTH; i++) {
@@ -253,10 +262,11 @@ LongNumber operator*(const LongNumber &left_number, const LongNumber &right_numb
     digit_t next = 0;
     //Setting fractional size because we multiply numbers
     LongNumber ans;
-    for (long long i =  right_number._digits.size() - 1; i >= 0; i--) {
+    long long number_of_iteration = 0;
+    for (long long i =  right_number._digits.size() - 1; i >= 0; i--, number_of_iteration++) {
         LongNumber tmp = LongNumber:: mul_on_digit(left_number, right_number._digits[i]);
         tmp._fractional_size = 0;
-        for (long long j = right_number._digits.size() - 1; j > i; j--) {
+        for (long long j = 0; j < number_of_iteration; j++) {
             tmp._digits.push_back(0);
         }
         ans += tmp;
@@ -267,6 +277,7 @@ LongNumber operator*(const LongNumber &left_number, const LongNumber &right_numb
     if(ans._is_zero()){
         ans._is_negative = false;
     }
+
     return ans;
 }
 
@@ -369,6 +380,21 @@ LongNumber LongNumber::operator+() {
 }
 
 
+LongNumber operator ""_Ln(const char* string_num, const size_t len) {
+    return LongNumber(string_num);
+}
+
+
+LongNumber operator ""_Ln(const unsigned long long number) {
+    return LongNumber(number);
+}
+
+
+LongNumber operator ""_Ln(long double number) {
+    return LongNumber(std::to_string(number));
+}
+
+
 std::ostream& operator<<(std::ostream& os, const LongNumber& num) {
     os << num.to_string();
     return os;
@@ -441,6 +467,7 @@ std::string LongNumber::to_string(const long long& precision) const{
             index++;
         }
     }
+    
     ans += ".";
     for (long long i = 0; i < std::min(full_fraction_digits, _fractional_size); i++) {
         std::string tmp = std::to_string(_digits[i + integer_part_size]);
@@ -466,17 +493,17 @@ std::string LongNumber::to_string() const{
 
 
 LongNumber LongNumber::calculate_pi(const size_t& precision) {
-    LongNumber ans(0);
+    LongNumber ans(0, precision);
     for (size_t k = 0; k < precision; k++) {
         LongNumber tmp(1, precision);
         for (size_t j = 0; j < k; j++) {
             tmp = tmp / 16;
         }
-        tmp = tmp * (LongNumber(8) / (8 * k + 2) + LongNumber(4) / (8 * k + 3) + 
-        LongNumber(4) / (8 * k + 4) - LongNumber(1) / (8 * k + 7));
+        tmp = tmp * (8 / LongNumber(8 * k + 2, precision) + (4) / LongNumber(8 * k + 3, precision) + 
+        (4) / LongNumber(8 * k + 4, precision) - (1) / LongNumber(8 * k + 7, precision));
         ans += tmp;
     }
-    return (ans * 0.5).to_string(precision);
+    return LongNumber((ans * 0.5).to_string(precision));
 
 }
 

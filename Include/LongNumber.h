@@ -57,7 +57,6 @@ class LongNumber {
     //In case of something very strange
     LongNumber operator+();
 
-
     friend std::ostream& operator<<(std::ostream& os, const LongNumber& num);
     //And a bit of assignment and increment/decrement one's 
     LongNumber& operator +=(const LongNumber& right_number);
@@ -86,3 +85,6 @@ class LongNumber {
 
     bool _is_zero() const; 
 };
+LongNumber operator ""_Ln(const char* string_num, const size_t len);
+LongNumber operator ""_Ln(const unsigned long long number);
+LongNumber operator ""_Ln(long double number);
