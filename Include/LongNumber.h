@@ -8,6 +8,7 @@
 //LongNumber is a number, which have 10^17 base digits instead of 10 base
 typedef unsigned long long digit_t;
 #define DIGIT_LENGTH 9
+#define DEFAULT_PRECISION 15ll
 //Over digit = maximum digit + 1
 #define OVER_DIGIT (digit_t)1000000000
 
@@ -22,19 +23,19 @@ class LongNumber {
 
     //Constructors
     LongNumber(const LongNumber&) = default;
-    LongNumber(const std::string &string_number,const size_t& accuracy = 0);
-    LongNumber(const char* string_number, const size_t& accuracy = 0);
+    LongNumber(const std::string &string_number,const long long& accuracy = 0);
+    LongNumber(const char* string_number, const long long& accuracy = 0);
 
-    LongNumber(const short& int_number, const size_t& accuracy = 0);
-    LongNumber(const unsigned short& int_number,const size_t& accuracy = 0);
+    LongNumber(const short& int_number, const long long& accuracy = 0);
+    LongNumber(const unsigned short& int_number,const long long& accuracy = 0);
 
-    LongNumber(const int& int_number, const size_t& accuracy = 0);
-    LongNumber(const unsigned int& int_number, const size_t& accuracy = 0);
+    LongNumber(const int& int_number, const long long& accuracy = 0);
+    LongNumber(const unsigned int& int_number, const long long& accuracy = 0);
 
-    LongNumber(const long long& int_number, const size_t& accuracy = 0);
-    LongNumber(const unsigned long long& int_number, const size_t& accuracy = 0);
+    LongNumber(const long long& int_number, const long long& accuracy = 0);
+    LongNumber(const unsigned long long& int_number, const long long& accuracy = 0);
 
-    LongNumber(const double& number, const size_t& accuracy = 0);
+    LongNumber(const double& number, const long long& accuracy = 0);
     //Operators
 
     //Logic
@@ -49,8 +50,6 @@ class LongNumber {
     //Arithmetic
     friend LongNumber operator+(const LongNumber &left_number, const LongNumber &right_number);
     friend LongNumber operator-(const LongNumber &left_number, const LongNumber &right_number);
-    friend LongNumber operator*(const LongNumber &left_number, const digit_t &right_number);
-    friend LongNumber operator*(const digit_t &left_number, const LongNumber &right_number);
     friend LongNumber operator*(const LongNumber &left_number, const LongNumber &right_number);
     friend LongNumber operator/(const LongNumber &left_number, const LongNumber &right_number);
 
@@ -72,14 +71,15 @@ class LongNumber {
     
     friend LongNumber abs(LongNumber);
     std::string to_string() const;
-    std::string to_string(const size_t& precision) const;
+    std::string to_string(const long long& precision) const;
 
     private:
     std::vector<digit_t> _digits;
     friend LongNumber _abs_add(const LongNumber& left_number, const LongNumber& right_number);
     friend LongNumber _abs_sub(const LongNumber& left_number, const LongNumber& right_number);
     bool _is_negative;
-    size_t _fractional_size;
+    long long _fractional_size;
+    static LongNumber mul_on_digit(const LongNumber& left_number, const digit_t& right_number);
     void _clean_right_zeros();
     static digit_t _find_digit_multip(const LongNumber& result, const LongNumber& multiplier);
     bool _is_zero() const; 

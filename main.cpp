@@ -1,7 +1,6 @@
 #include <LongNumber.h>
 #include <iostream>
 int main() {
-    LongNumber a(2234.1543);
-    std::cout << a + 34125243;
+    std::cout << LongNumber("1") / LongNumber("3");
     return 0;
 }
