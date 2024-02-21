@@ -8,7 +8,7 @@
 //LongNumber is a number, which have 10^17 base digits instead of 10 base
 typedef unsigned long long digit_t;
 #define DIGIT_LENGTH 9
-#define DEFAULT_PRECISION 15ll
+#define DEFAULT_PRECISION 20ll
 //Over digit = maximum digit + 1
 #define OVER_DIGIT (digit_t)1000000000
 
@@ -72,6 +72,7 @@ class LongNumber {
     friend LongNumber abs(LongNumber);
     std::string to_string() const;
     std::string to_string(const long long& precision) const;
+    static LongNumber calculate_pi(const size_t& precision);
 
     private:
     std::vector<digit_t> _digits;
@@ -82,5 +83,6 @@ class LongNumber {
     static LongNumber mul_on_digit(const LongNumber& left_number, const digit_t& right_number);
     void _clean_right_zeros();
     static digit_t _find_digit_multip(const LongNumber& result, const LongNumber& multiplier);
+
     bool _is_zero() const; 
 };

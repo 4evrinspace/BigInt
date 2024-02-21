@@ -57,6 +57,7 @@ LongNumber::LongNumber(const std::string &string_number, const long long& accura
     }
     //Correcting order
     std::reverse(_digits.begin(), _digits.end());
+    
     //Filling with fractional digits
     if (_fractional_size != 0) {
         current_size = 0;
@@ -76,7 +77,9 @@ LongNumber::LongNumber(const std::string &string_number, const long long& accura
         for (long long i = 0; i < back_zeros % DIGIT_LENGTH; i++) {
             current_number *= 10;
         }
-        _digits.push_back(current_number);
+        if (dot_position + 1 != string_len){
+            _digits.push_back(current_number);
+        }
         for (long long i = 0; i < back_zeros / DIGIT_LENGTH; i++) {
             _digits.push_back(0);
         }
@@ -192,7 +195,7 @@ bool operator>=(const LongNumber &left_number, const LongNumber &right_number) {
 LongNumber operator+(const LongNumber& left_number, const LongNumber& right_number) {
     //If not the same sign it is subtraction from positive negative
     if (right_number._is_negative != left_number._is_negative) {
-        if (right_number._is_negative) {
+        if (abs(right_number) <= abs(left_number)) {
             return _abs_sub(left_number, right_number);
         } else {
             return _abs_sub(right_number, left_number);
@@ -260,6 +263,10 @@ LongNumber operator*(const LongNumber &left_number, const LongNumber &right_numb
     }
     ans._fractional_size =  left_number._fractional_size + right_number._fractional_size;
     ans._clean_right_zeros();
+    ans._is_negative = left_number._is_negative ^ right_number._is_negative;
+    if(ans._is_zero()){
+        ans._is_negative = false;
+    }
     return ans;
 }
 
@@ -339,7 +346,10 @@ LongNumber operator/(const LongNumber &left_number, const LongNumber &right_numb
     }
     ans._fractional_size -= right_number._fractional_size;
     ans._clean_right_zeros();
-    
+    ans._is_negative = left_number._is_negative ^ right_number._is_negative;
+    if(ans._is_zero()){
+        ans._is_negative = false;
+    }
     return ans;
 
 }
@@ -414,6 +424,9 @@ std::string LongNumber::to_string(const long long& precision) const{
     const long long full_fraction_digits = precision / DIGIT_LENGTH;
     const long long integer_part_size = _digits.size() - _fractional_size;
     std::string ans;
+    if (_is_negative) {
+        ans += "-";
+    }
     long long index = 0;
     while (index < integer_part_size && _digits[index] == 0) {
         index++;
@@ -449,6 +462,22 @@ std::string LongNumber::to_string(const long long& precision) const{
 
 std::string LongNumber::to_string() const{
     return this->to_string(_fractional_size * DIGIT_LENGTH);
+}
+
+
+LongNumber LongNumber::calculate_pi(const size_t& precision) {
+    LongNumber ans(0);
+    for (size_t k = 0; k < precision; k++) {
+        LongNumber tmp(1, precision);
+        for (size_t j = 0; j < k; j++) {
+            tmp = tmp / 16;
+        }
+        tmp = tmp * (LongNumber(8) / (8 * k + 2) + LongNumber(4) / (8 * k + 3) + 
+        LongNumber(4) / (8 * k + 4) - LongNumber(1) / (8 * k + 7));
+        ans += tmp;
+    }
+    return (ans * 0.5).to_string(precision);
+
 }
 
 
@@ -495,11 +524,13 @@ LongNumber _abs_add(const LongNumber& left_number, const LongNumber& right_numbe
     }
     //If leading digits left, fill them 
     while (left_index >= 0) {
-        ans._digits.push_back(left_number._digits[left_index]);
+        ans._digits.push_back((left_number._digits[left_index] + next) % OVER_DIGIT);
+        next = (left_number._digits[left_index] + next) / OVER_DIGIT;
         left_index--;
     }
     while (right_index >= 0) {
-        ans._digits.push_back(right_number._digits[right_index]);
+        ans._digits.push_back((right_number._digits[right_index] + next) % OVER_DIGIT);
+        next = (right_number._digits[right_index] + next) / OVER_DIGIT;
         right_index--;
     }
     std::reverse(ans._digits.begin(), ans._digits.end());
@@ -513,7 +544,7 @@ LongNumber _abs_add(const LongNumber& left_number, const LongNumber& right_numbe
     return ans;
 }
 
-//Only for subtraction greater abs(number) (same sign)
+//Only for subtraction from greater abs(number) (same signs)
 LongNumber _abs_sub(const LongNumber& left_number, const LongNumber& right_number) {
     digit_t next = 0;
     LongNumber ans;
