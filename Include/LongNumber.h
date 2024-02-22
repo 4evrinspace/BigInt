@@ -12,8 +12,6 @@ typedef unsigned long long digit_t;
 //Over digit = maximum digit + 1
 #define OVER_DIGIT (digit_t)1000000000
 
-//TODO https://en.cppreference.com/w/cpp/language/user_literal
-
 class LongNumber {
     public:
     ~LongNumber() = default;
@@ -72,7 +70,7 @@ class LongNumber {
     
     friend LongNumber abs(LongNumber);
     std::string to_string() const;
-    std::string to_string(const long long& precision) const;
+    std::string to_string(long long precision) const;
     static LongNumber calculate_pi(size_t precision);
 
     private:

@@ -1,12 +1,14 @@
 #include <LongNumber.h>
 
+
 LongNumber::LongNumber()  : _is_negative(false), _digits({}), _fractional_size(0) {}
 
 
 // LongNumber store AT LEAST accuracy digits after decimal point
 LongNumber::LongNumber(const std::string &string_number, const long long& accuracy) {
     // How many digits we need after decimal point to store this number
-    const long long chunk_accuracy = (accuracy + DIGIT_LENGTH - 1) / DIGIT_LENGTH;
+    const long long chunk_accuracy = (std::max(accuracy, 0ll) + DIGIT_LENGTH - 1) / DIGIT_LENGTH;
+
     *this = LongNumber();
     // "" - empty number with correct number of fractional digits
     if (string_number == "") {
@@ -71,6 +73,7 @@ LongNumber::LongNumber(const std::string &string_number, const long long& accura
         long long filled = 0;
         current_size = 0;
         current_number = 0;
+        long long count = 0;
         for (long long i = dot_position + 1; i < string_len; i++) {
             current_number *= 10;
             current_number += string_number[i] - '0';
@@ -79,6 +82,7 @@ LongNumber::LongNumber(const std::string &string_number, const long long& accura
                 _digits.push_back(current_number);
                 current_size = 0;
                 current_number = 0;
+                count++;
             } 
         }
         //Filing the last digit with zeros
@@ -86,11 +90,10 @@ LongNumber::LongNumber(const std::string &string_number, const long long& accura
         for (long long i = 0; i < back_zeros % DIGIT_LENGTH; i++) {
             current_number *= 10;
         }
-        if (current_number != 0 || back_zeros >= DIGIT_LENGTH){
+        while (count != _fractional_size) {
             _digits.push_back(current_number);
-        }
-        for (long long i = 0; i < back_zeros / DIGIT_LENGTH; i++) {
-            _digits.push_back(0);
+            current_number = 0;
+            count++;
         }
     }
     //Beause zero is always positive
@@ -122,58 +125,50 @@ LongNumber::LongNumber(const double& int_number, const long long& accuracy) : Lo
 
 
 bool operator<(const LongNumber& left_number, const LongNumber& right_number) {
-    
-    if (left_number._is_zero() && !(right_number._is_zero())) {
-        return !(right_number._is_negative);
+    LongNumber lhs = left_number;
+    LongNumber rhs = right_number;
+    lhs._clean_right_zeros();
+    rhs._clean_right_zeros();
+    if (lhs._is_zero() && !(rhs._is_zero())) {
+        return !(rhs._is_negative);
     }
-    if (!(left_number._is_zero()) && right_number._is_zero()) {
-        return left_number._is_negative;
+    if (!(lhs._is_zero()) && rhs._is_zero()) {
+        return lhs._is_negative;
     }
-    if (left_number._is_zero() && right_number._is_zero()) {
+    if (lhs._is_zero() && rhs._is_zero()) {
         return false;
     }
-    if (left_number._is_negative != left_number._is_negative) {
-        return left_number._is_negative;
+    if (lhs._is_negative != rhs._is_negative) {
+        return lhs._is_negative;
     }
     //In negative comparing is opposite
-    bool comparing_negative = left_number._is_negative;
+    bool comparing_negative = lhs._is_negative;
     long long left_begin = 0;
     long long right_begin = 0;
 
-    for (; left_number._digits[left_begin] == 0; left_begin++);
-    for (; right_number._digits[right_begin] == 0; right_begin++);
+    for (; lhs._digits[left_begin] == 0; left_begin++);
+    for (; rhs._digits[right_begin] == 0; right_begin++);
 
     //Len of integer parts
-    long long left_integer = left_number._digits.size() - left_number._fractional_size - left_begin;
-    long long right_integer = right_number._digits.size() - right_number._fractional_size - right_begin;
+    long long left_integer = lhs._digits.size() - lhs._fractional_size - left_begin;
+    long long right_integer = rhs._digits.size() - rhs._fractional_size - right_begin;
     if (left_integer != right_integer) {
         return (left_integer < right_integer) ^ comparing_negative;
     }
-    for (long long i = 0; left_begin + i < left_number._digits.size() &&
-                        right_begin + i < right_number._digits.size(); i++) {
-        if (left_number._digits[i + left_begin] != right_number._digits[i + right_begin]) {
-            return (left_number._digits[i + left_begin] < right_number._digits[i + right_begin]) ^ comparing_negative;
+    for (long long i = 0; left_begin + i < lhs._digits.size() &&
+                        right_begin + i < rhs._digits.size(); i++) {
+        if (lhs._digits[i + left_begin] != rhs._digits[i + right_begin]) {
+            return (lhs._digits[i + left_begin] < rhs._digits[i + right_begin]) ^ comparing_negative;
         }
     }
-    //fractional part could containe back-zeros
-    long long left_back_zeros = 0;
-    long long right_back_zeros = 0;
 
-    for (; left_back_zeros < left_number._fractional_size && 
-        left_number._digits[left_number._digits.size() - 1 - left_back_zeros] == 0; left_back_zeros++);
-    for (; right_back_zeros < right_number._fractional_size && 
-        right_number._digits[right_number._digits.size() - 1 - right_back_zeros] == 0; right_back_zeros++);
-
-    long long left_fractional = left_number._fractional_size - left_back_zeros;
-    long long right_fractional = right_number._fractional_size - right_back_zeros;
     
-    return (left_fractional < right_fractional) ^ comparing_negative;
+    return (lhs._fractional_size < rhs._fractional_size) ^ comparing_negative;
 }
 
 
 bool operator==(const LongNumber& left_number, const LongNumber& right_number) {
-    //Easy to see that
-    return !(left_number < right_number) && !(right_number < left_number);
+    return left_number.to_string() == right_number.to_string();
 }
 
 
@@ -456,9 +451,9 @@ LongNumber abs(LongNumber num) {
 }
 
 //Presision - number of digits after decimal point
-std::string LongNumber::to_string(const long long& precision) const{
+std::string LongNumber::to_string(long long precision) const{
     // Number of chunks after point
-    
+    precision = std::max(precision, 0ll);
     const long long full_fraction_digits = precision / DIGIT_LENGTH;
     const long long integer_part_size = _digits.size() - _fractional_size;
     std::string ans;
