@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 
 #setting vars
-set(GCC_COMPILE_OPTIONS "-Wall -O2 ")
+set(GCC_COMPILE_OPTIONS "-Wall -O2 -pthread")
 #adding library and include file to library
 add_library(LongNumber SHARED Source/LongNumber.cpp)
 target_include_directories(LongNumber PUBLIC Include)

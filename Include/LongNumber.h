@@ -8,7 +8,7 @@
 //LongNumber is a number, which have 10^17 base digits instead of 10 base
 typedef unsigned long long digit_t;
 #define DIGIT_LENGTH 9
-#define DEFAULT_PRECISION 20ll
+#define DEFAULT_PRECISION 13ll
 //Over digit = maximum digit + 1
 #define OVER_DIGIT (digit_t)1000000000
 
@@ -61,6 +61,8 @@ class LongNumber {
     //And a bit of assignment and increment/decrement one's 
     LongNumber& operator +=(const LongNumber& right_number);
     LongNumber& operator -=(const LongNumber& right_number);
+    LongNumber& operator *=(const LongNumber& right_number);
+    LongNumber& operator /=(const LongNumber& right_number);
     //Prefix
     LongNumber& operator ++();
     LongNumber& operator --();
@@ -71,7 +73,7 @@ class LongNumber {
     friend LongNumber abs(LongNumber);
     std::string to_string() const;
     std::string to_string(const long long& precision) const;
-    static LongNumber calculate_pi(const size_t& precision);
+    static LongNumber calculate_pi(size_t precision);
 
     private:
     std::vector<digit_t> _digits;

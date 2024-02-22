@@ -401,14 +401,26 @@ std::ostream& operator<<(std::ostream& os, const LongNumber& num) {
 }
 
 
-LongNumber& LongNumber::operator +=(const LongNumber& right_number) {
+LongNumber& LongNumber::operator+=(const LongNumber& right_number) {
     (*this) = (*this) + right_number;
     return (*this);
 }
 
 
-LongNumber& LongNumber::operator -=(const LongNumber& right_number) {
+LongNumber& LongNumber::operator-=(const LongNumber& right_number) {
     (*this) = (*this) - right_number;
+    return (*this);
+}
+
+
+LongNumber& LongNumber::operator*=(const LongNumber& right_number) {
+    (*this) = (*this) * right_number;
+    return (*this);
+}
+
+
+LongNumber& LongNumber::operator/=(const LongNumber& right_number) {
+    (*this) = (*this) / right_number;
     return (*this);
 }
 
@@ -446,7 +458,7 @@ LongNumber abs(LongNumber num) {
 //Presision - number of digits after decimal point
 std::string LongNumber::to_string(const long long& precision) const{
     // Number of chunks after point
-
+    
     const long long full_fraction_digits = precision / DIGIT_LENGTH;
     const long long integer_part_size = _digits.size() - _fractional_size;
     std::string ans;
@@ -457,6 +469,7 @@ std::string LongNumber::to_string(const long long& precision) const{
     while (index < integer_part_size && _digits[index] == 0) {
         index++;
     }
+    
     if (index == integer_part_size) {
         ans += "0";
     } else {
@@ -492,16 +505,13 @@ std::string LongNumber::to_string() const{
 }
 
 
-LongNumber LongNumber::calculate_pi(const size_t& precision) {
+LongNumber LongNumber::calculate_pi(size_t precision) {
     LongNumber ans(0, precision);
+    LongNumber tmp(1, precision);
     for (size_t k = 0; k < precision; k++) {
-        LongNumber tmp(1, precision);
-        for (size_t j = 0; j < k; j++) {
-            tmp = tmp / 16;
-        }
-        tmp = tmp * (8 / LongNumber(8 * k + 2, precision) + (4) / LongNumber(8 * k + 3, precision) + 
+        ans += tmp * (8 / LongNumber(8 * k + 2, precision) + (4) / LongNumber(8 * k + 3, precision) + 
         (4) / LongNumber(8 * k + 4, precision) - (1) / LongNumber(8 * k + 7, precision));
-        ans += tmp;
+        tmp /= LongNumber(16, precision);
     }
     return LongNumber((ans * 0.5).to_string(precision));
 
@@ -580,7 +590,15 @@ LongNumber _abs_sub(const LongNumber& left_number, const LongNumber& right_numbe
     int fractional_digits_right = right_number._fractional_size;
     int left_index = left_number._digits.size() - 1;
     int right_index = right_number._digits.size() - 1;
-    
+    while (fractional_digits_right != 0 && right_number._digits[right_index] == 0) {
+        fractional_digits_right--;
+        right_index--;
+    }
+    while (fractional_digits_left != 0 && left_number._digits[left_index] == 0) {
+        fractional_digits_left--;
+        left_index--;
+    }
+    ans._fractional_size = std::max(fractional_digits_left, fractional_digits_right);
     if (fractional_digits_left != fractional_digits_right) {
         // Like in normal - we "borrow" from the next digit 
         while (fractional_digits_left < fractional_digits_right) {
@@ -590,7 +608,8 @@ LongNumber _abs_sub(const LongNumber& left_number, const LongNumber& right_numbe
             fractional_digits_right--;
         }
         //If left has more, we will just copy them
-        while (fractional_digits_left < fractional_digits_right) {
+        while (fractional_digits_left > fractional_digits_right) {
+            
             ans._digits.push_back(left_number._digits[left_index]);
             left_index--;
             fractional_digits_left--;
@@ -632,7 +651,6 @@ LongNumber _abs_sub(const LongNumber& left_number, const LongNumber& right_numbe
     if (ans._is_zero()) {
         ans._is_negative = false;
     }
-
     return ans;
 }
 
